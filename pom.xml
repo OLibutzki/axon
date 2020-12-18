@@ -1,0 +1,18 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>axon</artifactId>
+	<packaging>pom</packaging>
+	<parent>
+		<groupId>de.libutzki.axon</groupId>
+		<artifactId>axon-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>axon-parent</relativePath>
+	</parent>
+	<modules>
+		<module>axon-parent</module>
+		<module>axon-localeventstore</module>
+		<module>axon-embeddedserver</module>
+		<module>axonserver-example</module>
+		<module>embeddedserver-example</module>
+	</modules>
+</project>
