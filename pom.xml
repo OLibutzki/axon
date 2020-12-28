@@ -12,7 +12,7 @@
 		<module>axon-parent</module>
 		<module>axon-localeventstore</module>
 		<module>axon-embeddedserver</module>
-		<module>axonserver-example</module>
-		<module>embeddedserver-example</module>
+		<module>axon-embeddedserver-connector</module>
+		<module>axon-example</module>
 	</modules>
 </project>

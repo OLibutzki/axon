@@ -6,5 +6,11 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../axon-parent</relativePath>
 	</parent>
-  <artifactId>embeddedserver-example</artifactId>
+  <artifactId>axon-embeddedserver-connector</artifactId>
+  <dependencies>
+  	<dependency>
+  		<groupId>de.libutzki.axon</groupId>
+  		<artifactId>axon-embeddedserver</artifactId>
+  	</dependency>
+  </dependencies>
 </project>

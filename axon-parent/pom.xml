@@ -14,6 +14,7 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<axon.version>4.4.5</axon.version>
+		<testcontainers.version>1.15.1</testcontainers.version>
 	</properties>
 
 
@@ -43,6 +44,22 @@
 				<groupId>de.libutzki.axon</groupId>
 				<artifactId>axon-localeventstore</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.libutzki.axon</groupId>
+				<artifactId>axon-embeddedserver</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.libutzki.axon</groupId>
+				<artifactId>axon-embeddedserver-connector</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${testcontainers.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
