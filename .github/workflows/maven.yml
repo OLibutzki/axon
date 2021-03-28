@@ -21,4 +21,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn -U -B VERIFY --file pom.xml
+      run: mvn -U -B verify --file pom.xml
