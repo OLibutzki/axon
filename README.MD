@@ -1,3 +1,4 @@
+[![Java CI with Maven](https://github.com/OLibutzki/axon/actions/workflows/maven.yml/badge.svg)](https://github.com/OLibutzki/axon/actions/workflows/maven.yml)
 # Local EventStore and Embedded Server Draft
 This repository acts as a first draft for a Local EventStore and an Embedded Server implementation.
 
