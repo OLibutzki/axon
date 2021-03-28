@@ -15,7 +15,7 @@ import org.axonframework.eventhandling.TrackedEventMessage;
 import org.axonframework.eventhandling.TrackingEventProcessor;
 import org.axonframework.eventhandling.TrackingEventProcessorConfiguration;
 import org.axonframework.eventhandling.TrackingToken;
-import org.axonframework.eventhandling.async.SequentialPerAggregatePolicy;
+import org.axonframework.eventhandling.async.SequentialPolicy;
 import org.axonframework.eventhandling.tokenstore.TokenStore;
 import org.axonframework.eventsourcing.MultiStreamableMessageSource;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
@@ -49,7 +49,7 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 				.build( );
 
 		final SimpleEventHandlerInvoker eventHandlerInvoker = SimpleEventHandlerInvoker.builder( )
-				.sequencingPolicy( SequentialPerAggregatePolicy.instance( ) )
+				.sequencingPolicy( new SequentialPolicy() )
 				.parameterResolverFactory( parameterResolverFactory )
 				.eventHandlers( new GlobalEventPublisher( globalEventStore, origin ) )
 				.build( );
@@ -57,7 +57,7 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 		trackingEventProcessor = TrackingEventProcessor.builder( )
 				.name( "localEventStoreTracker" )
 				.eventHandlerInvoker( eventHandlerInvoker )
-				.trackingEventProcessorConfiguration( TrackingEventProcessorConfiguration.forParallelProcessing( 4 ) )
+				.trackingEventProcessorConfiguration( TrackingEventProcessorConfiguration.forSingleThreadedProcessing() )
 				.messageMonitor( configuration.messageMonitor( TrackingEventProcessor.class, "localEventStoreTracker" ) )
 				.messageSource( localEventStore )
 				.tokenStore( configuration.getComponent( TokenStore.class ) )
