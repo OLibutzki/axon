@@ -1,6 +1,9 @@
 vscode:
   extensions:
-    - gabrielbb.vscode-lombok@1.0.0:48tiO1CQwrunMwzQNMVDbg==
+    - redhat.java
+    - vscjava.vscode-java-debug
+    - vscjava.vscode-java-test
+    - gabrielbb.vscode-lombok
 tasks:
   - name: docker daemon
     before: sudo docker-up
