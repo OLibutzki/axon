@@ -3,6 +3,7 @@ package de.libutzki.axon.localeventstore;
 import org.axonframework.common.jdbc.PersistenceExceptionResolver;
 import org.axonframework.common.jpa.EntityManagerProvider;
 import org.axonframework.common.transaction.TransactionManager;
+import org.axonframework.config.Configurer;
 import org.axonframework.eventsourcing.eventstore.EmbeddedEventStore;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -10,6 +11,7 @@ import org.axonframework.eventsourcing.eventstore.jpa.JpaEventStorageEngine;
 import org.axonframework.messaging.annotation.ParameterResolverFactory;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.spring.config.AxonConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -27,6 +29,11 @@ import org.springframework.context.annotation.Primary;
 @AutoConfigureAfter( name = "org.axonframework.springboot.autoconfig.AxonServerAutoConfiguration" )
 @EntityScan( { "org.axonframework.eventhandling.tokenstore", "org.axonframework.modelling.saga.repository.jpa", "org.axonframework.eventsourcing.eventstore.jpa" } )
 public class AxonLocalEventStoreConfiguration {
+
+	@Autowired
+	void configureEventProcessing( final Configurer configurer, @Value( "${spring.application.name}" ) final String applicationName ) {
+		configurer.eventProcessing( ).registerDefaultHandlerInterceptor( ( c, p ) -> new OriginFilteringEventHandlerInterceptor( applicationName ) );
+	}
 
 	@Bean
 	@Primary
