@@ -2,8 +2,6 @@ package de.libutzki.axon.localeventstore;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import org.axonframework.common.Registration;
 import org.axonframework.common.stream.BlockingStream;
 import org.axonframework.common.transaction.TransactionManager;
@@ -20,7 +18,6 @@ import org.axonframework.eventhandling.tokenstore.TokenStore;
 import org.axonframework.eventsourcing.MultiStreamableMessageSource;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
 import org.axonframework.eventsourcing.eventstore.EventStore;
-import org.axonframework.eventsourcing.eventstore.FilteringDomainEventStream;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.StreamableMessageSource;
 import org.axonframework.messaging.annotation.ParameterResolverFactory;
@@ -37,19 +34,16 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 	private final StreamableMessageSource<TrackedEventMessage<?>> messageSource;
 	private final TrackingEventProcessor trackingEventProcessor;
 
-	private final Predicate<? extends EventMessage<?>> filter;
-
 	public LocalAndGlobalEventStoreAdapter( final EventStore localEventStore, final EventStore globalEventStore, final Configuration configuration, final ParameterResolverFactory parameterResolverFactory, final String origin ) {
 		this.localEventStore = localEventStore;
 		this.globalEventStore = globalEventStore;
-		filter = eventMessage -> !eventMessage.getMetaData( ).getOrDefault( MetadataKeys.ORIGIN, "" ).equals( origin );
 		messageSource = MultiStreamableMessageSource.builder( )
 				.addMessageSource( "globalEventStore", globalEventStore )
 				.addMessageSource( "localEventStore", localEventStore )
 				.build( );
 
 		final SimpleEventHandlerInvoker eventHandlerInvoker = SimpleEventHandlerInvoker.builder( )
-				.sequencingPolicy( new SequentialPolicy() )
+				.sequencingPolicy( new SequentialPolicy( ) )
 				.parameterResolverFactory( parameterResolverFactory )
 				.eventHandlers( new GlobalEventPublisher( globalEventStore, origin ) )
 				.build( );
@@ -57,7 +51,7 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 		trackingEventProcessor = TrackingEventProcessor.builder( )
 				.name( "localEventStoreTracker" )
 				.eventHandlerInvoker( eventHandlerInvoker )
-				.trackingEventProcessorConfiguration( TrackingEventProcessorConfiguration.forSingleThreadedProcessing() )
+				.trackingEventProcessorConfiguration( TrackingEventProcessorConfiguration.forSingleThreadedProcessing( ) )
 				.messageMonitor( configuration.messageMonitor( TrackingEventProcessor.class, "localEventStoreTracker" ) )
 				.messageSource( localEventStore )
 				.tokenStore( configuration.getComponent( TokenStore.class ) )
@@ -99,19 +93,14 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 
 	@Override
 	public BlockingStream<TrackedEventMessage<?>> openStream( final TrackingToken trackingToken ) {
-		final BlockingStream<TrackedEventMessage<?>> delegateStream = messageSource.openStream( trackingToken );
-		@SuppressWarnings( "unchecked" )
-		final BlockingStream<TrackedEventMessage<?>> blockingStream = new FilteringBlockingStream<>( delegateStream, ( Predicate<TrackedEventMessage<?>> ) filter );
-		return blockingStream;
+		return messageSource.openStream( trackingToken );
 	}
 
 	@Override
 	public DomainEventStream readEvents( final String aggregateIdentifier ) {
 		final DomainEventStream localEventStoreEventStream = localEventStore.readEvents( aggregateIdentifier );
 		final DomainEventStream globalEventStoreEventStream = globalEventStore.readEvents( aggregateIdentifier );
-		@SuppressWarnings( "unchecked" )
-		final FilteringDomainEventStream filteredGlobalEventStoreEventStream = new FilteringDomainEventStream( globalEventStoreEventStream, ( Predicate<? super DomainEventMessage<?>> ) filter );
-		return DomainEventStream.concat( localEventStoreEventStream, filteredGlobalEventStoreEventStream );
+		return DomainEventStream.concat( localEventStoreEventStream, globalEventStoreEventStream );
 	}
 
 	@Override
