@@ -16,7 +16,7 @@ public class TestConfiguration {
 	ChildEventHandler childEventHandler( ) {
 		return mock( ChildEventHandler.class );
 	}
-
+	
 	static class ChildEventHandler {
 
 		@EventHandler

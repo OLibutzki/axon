@@ -1,26 +1,22 @@
 package de.libutzki.axon.localeventstore;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import org.axonframework.common.Registration;
 import org.axonframework.common.stream.BlockingStream;
-import org.axonframework.common.transaction.TransactionManager;
-import org.axonframework.config.Configuration;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.EventMessage;
-import org.axonframework.eventhandling.SimpleEventHandlerInvoker;
 import org.axonframework.eventhandling.TrackedEventMessage;
-import org.axonframework.eventhandling.TrackingEventProcessor;
-import org.axonframework.eventhandling.TrackingEventProcessorConfiguration;
 import org.axonframework.eventhandling.TrackingToken;
-import org.axonframework.eventhandling.async.SequentialPolicy;
-import org.axonframework.eventhandling.tokenstore.TokenStore;
 import org.axonframework.eventsourcing.MultiStreamableMessageSource;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.MessageDispatchInterceptor;
 import org.axonframework.messaging.StreamableMessageSource;
-import org.axonframework.messaging.annotation.ParameterResolverFactory;
 
 /**
  * The {@link LocalAndGlobalEventStoreAdapter} is an adapter between the local and the global event store. Registrations
@@ -32,41 +28,27 @@ public final class LocalAndGlobalEventStoreAdapter implements EventStore {
 	private final EventStore globalEventStore;
 
 	private final StreamableMessageSource<TrackedEventMessage<?>> messageSource;
-	private final TrackingEventProcessor trackingEventProcessor;
 
-	public LocalAndGlobalEventStoreAdapter( final EventStore localEventStore, final EventStore globalEventStore, final Configuration configuration, final ParameterResolverFactory parameterResolverFactory, final String origin ) {
+	public LocalAndGlobalEventStoreAdapter( final EventStore localEventStore, final EventStore globalEventStore ) {
 		this.localEventStore = localEventStore;
 		this.globalEventStore = globalEventStore;
 		messageSource = MultiStreamableMessageSource.builder( )
 				.addMessageSource( "globalEventStore", globalEventStore )
 				.addMessageSource( "localEventStore", localEventStore )
 				.build( );
-
-		final SimpleEventHandlerInvoker eventHandlerInvoker = SimpleEventHandlerInvoker.builder( )
-				.sequencingPolicy( new SequentialPolicy( ) )
-				.parameterResolverFactory( parameterResolverFactory )
-				.eventHandlers( new GlobalEventPublisher( globalEventStore, origin ) )
-				.build( );
-
-		trackingEventProcessor = TrackingEventProcessor.builder( )
-				.name( "localEventStoreTracker" )
-				.eventHandlerInvoker( eventHandlerInvoker )
-				.trackingEventProcessorConfiguration( TrackingEventProcessorConfiguration.forSingleThreadedProcessing( ) )
-				.messageMonitor( configuration.messageMonitor( TrackingEventProcessor.class, "localEventStoreTracker" ) )
-				.messageSource( localEventStore )
-				.tokenStore( configuration.getComponent( TokenStore.class ) )
-				.transactionManager( configuration.getComponent( TransactionManager.class ) )
-				.build( );
-		trackingEventProcessor.start( );
-	}
-
-	public void shutdown( ) {
-		trackingEventProcessor.shutDown( );
 	}
 
 	@Override
 	public void publish( final List<? extends EventMessage<?>> events ) {
-		localEventStore.publish( events );
+		Map<Boolean, List<EventMessage<?>>> partitions = events.stream().collect(Collectors.partitioningBy(eventMessage -> eventMessage.getPayloadType( ).isAnnotationPresent(GlobalEvent.class)));
+		List<EventMessage<?>> localEvents = partitions.getOrDefault(Boolean.FALSE, Collections.emptyList());
+		if (!localEvents.isEmpty()) {
+			localEventStore.publish(localEvents);
+		}
+		List<EventMessage<?>> globalEvents = partitions.getOrDefault(Boolean.TRUE, Collections.emptyList());
+		if (!globalEvents.isEmpty()) {
+			globalEventStore.publish(globalEvents);
+		}
 	}
 
 	@Override
